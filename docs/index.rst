@@ -11,4 +11,7 @@ Welcome to Requests-OIDC's documentation!
    :github:
    :pypi: fast-json-pointer
 
+.. include:: ../README.rst
+  :start-after: inclusion-marker-do-not-remove
+
 .. autofunction:: requests_oidc.make_oidc_session

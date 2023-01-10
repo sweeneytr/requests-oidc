@@ -9,7 +9,7 @@ Welcome to Requests-OIDC's documentation!
 .. sidebar-links::
    :caption: Project Links:
    :github:
-   :pypi: fast-json-pointer
+   :pypi: requests-oidc
 
 .. include:: ../README.rst
   :start-after: inclusion-marker-do-not-remove

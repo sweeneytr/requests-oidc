@@ -6,6 +6,11 @@ Requests-OIDC
 Implements a simple single-function API for creating a requests ``Session`` that
 manages your OIDC-discovered OAuth2 session for you.
 
+::
+
+   pip install requests-oidc
+
+
 .. list-table::
 
    * - Package

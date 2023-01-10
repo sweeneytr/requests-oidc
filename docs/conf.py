@@ -18,6 +18,7 @@ extensions = [
     "sphinx.ext.autodoc", 
     "sphinx_toolbox.github",
     "sphinx_toolbox.sidebar_links",
+    "sphinx_copybutton",
 ]
 
 github_username = "tsweeney-dust"

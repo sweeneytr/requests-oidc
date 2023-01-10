@@ -1,10 +1,12 @@
 [tool.poetry]
 name = "requests-oidc"
-version = "0.1.0"
+version = "0.1.2"
 description = ""
 authors = ["Tristan Sweeney <tsweeney@dustidentity.com>"]
-readme = "README.md"
+readme = "README.rst"
 packages = [{include = "requests_oidc"}]
+repository = "https://github.com/tsweeney-dust/requests-oidc"
+documentation = "https://requests-oidc.readthedocs.io/en/latest/"
 
 [tool.poetry.dependencies]
 python = "^3.11"

@@ -6,4 +6,9 @@
 Welcome to Requests-OIDC's documentation!
 =========================================
 
+.. sidebar-links::
+   :caption: Project Links:
+   :github:
+   :pypi: fast-json-pointer
+
 .. autofunction:: requests_oidc.make_oidc_session

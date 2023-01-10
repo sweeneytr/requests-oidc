@@ -7,6 +7,7 @@ readme = "README.rst"
 packages = [{include = "requests_oidc"}]
 repository = "https://github.com/tsweeney-dust/requests-oidc"
 documentation = "https://requests-oidc.readthedocs.io/en/latest/"
+license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.11"

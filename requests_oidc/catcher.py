@@ -18,10 +18,10 @@ class HTTPServerHandler(BaseHTTPRequestHandler):
 
 class RedirectCatcher:
     FORMAT = "http://localhost:{port}/callback"
-    
+
     def __init__(self, port: int) -> None:
         self.server = HTTPServer(("localhost", port), HTTPServerHandler)
-        self.redirect_uri = self.FORMAT.format(port)
+        self.redirect_uri = self.FORMAT.format(port=port)
 
     def catch(self) -> str:
         with self.server:

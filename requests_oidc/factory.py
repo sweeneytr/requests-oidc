@@ -1,7 +1,11 @@
+import json
 import webbrowser
+from pathlib import Path
 from typing import Callable
 
-import requests_oauthlib
+from appdirs import AppDirs
+from oauthlib.oauth2.rfc6749.errors import OAuth2Error
+from requests_oauthlib import OAuth2Session
 
 from .catcher import RedirectCatcher
 from .discovery import ServerDetails
@@ -13,39 +17,80 @@ def make_oidc_session(
     oidc_url: str,
     client_id: str,
     port: int,
+    token: dict | None = None,
     updater: TokenUpdater | None = None,
-    **kwargs
-) -> requests_oauthlib.OAuth2Session:
+    **kwargs,
+) -> OAuth2Session:
     # Docstring set below to leverage f-strings
-    
+
     auth_server = ServerDetails.discover(oidc_url)
     redirect_catcher = RedirectCatcher(port)
 
-    session = requests_oauthlib.OAuth2Session(
+    session = OAuth2Session(
         redirect_uri=redirect_catcher.redirect_uri,
         auto_refresh_url=auth_server.token_url,
         auto_refresh_kwargs={"client_id": client_id},
+        token=token,
         token_updater=updater or (lambda token: None),
         client_id=client_id,
         **kwargs,
     )
 
-    auth_redirect_url, _ = session.authorization_url(auth_server.auth_url)
-    webbrowser.open(auth_redirect_url)
+    try:
+        if token:
+            token = session.refresh_token(auth_server.token_url)
+    except OAuth2Error:
+        token = None
 
-    path = redirect_catcher.catch()
+    if not token:
+        auth_redirect_url, _ = session.authorization_url(auth_server.auth_url)
+        webbrowser.open(auth_redirect_url)
 
-    # requests_oauthlib insists you must redirect to https. So I lied to it.
-    reply = "https://thecakeisalie.test" + path
-    token = session.fetch_token(auth_server.token_url, authorization_response=reply)
+        path = redirect_catcher.catch()
+
+        # requests_oauthlib insists you must use https. So I lied to it.
+        reply = "https://thecakeisalie.test" + path
+        token = session.fetch_token(auth_server.token_url, authorization_response=reply)
 
     if updater:
         updater(token)
 
     return session
 
-make_oidc_session.__doc__ = (
-    f''' Create an `OAuth2Session <https://requests-oauthlib.readthedocs.io/en/latest/api.html#oauth-2-0-session>`_
+
+def make_path_session(path: Path | str, **kwargs) -> OAuth2Session:
+    match path:
+        case str():
+            path = Path(path)
+
+    try:
+        with path.open() as f:
+            token = json.load(f)
+    except FileNotFoundError:
+        token = None
+
+    def update(token: dict) -> None:
+        with path.open("w") as f:
+            json.dump(token, f)
+
+    return make_oidc_session(token=token, updater=update, **kwargs)
+
+
+def make_os_cached_session(
+    appname: str,
+    appauthor: str,
+    filename: Path | str = "token.json",
+    version: str | None = None,
+    **kwargs,
+) -> OAuth2Session:
+    appdirs = AppDirs(appname, appauthor, version)
+    dir = Path(appdirs.user_cache_dir)
+    dir.mkdir(parents=True, exist_ok=True)
+    file = dir / filename
+    return make_path_session(file, **kwargs)
+
+
+make_oidc_session.__doc__ = f""" Create an `OAuth2Session <https://requests-oauthlib.readthedocs.io/en/latest/api.html#oauth-2-0-session>`_
     via web redirect, w/ automatic token management.
 
     After it is created, this session will behave as a regular
@@ -73,5 +118,4 @@ make_oidc_session.__doc__ = (
 
     .. _O2S: 
     .. _S: https://requests-oauthlib.readthedocs.io/en/latest/api.html#oauth-2-0-session
-    '''
-)
+    """

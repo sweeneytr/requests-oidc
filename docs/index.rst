@@ -15,3 +15,9 @@ Welcome to Requests-OIDC's documentation!
   :start-after: inclusion-marker-do-not-remove
 
 .. autofunction:: requests_oidc.make_oidc_session
+
+
+.. autofunction:: requests_oidc.make_path_session
+
+
+.. autofunction:: requests_oidc.make_os_cached_session

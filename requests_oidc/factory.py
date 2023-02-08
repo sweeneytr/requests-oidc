@@ -59,6 +59,7 @@ def make_oidc_session(
 
 
 def make_path_session(path: Path | str, **kwargs) -> OAuth2Session:
+    '''Same as ``make_oidc_session``, but saves/loads token to OS path.'''
     match path:
         case str():
             path = Path(path)
@@ -83,6 +84,7 @@ def make_os_cached_session(
     version: str | None = None,
     **kwargs,
 ) -> OAuth2Session:
+    '''Same as ``make_oidc_session``, but saves/loads token to the OS-relevant user cache directory (appdata, ~/.cache/..., etc).'''
     appdirs = AppDirs(appname, appauthor, version)
     dir = Path(appdirs.user_cache_dir)
     dir.mkdir(parents=True, exist_ok=True)

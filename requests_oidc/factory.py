@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Callable
 
 from appdirs import AppDirs
+from oauthlib.oauth2 import BackendApplicationClient
 from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 from requests_oauthlib import OAuth2Session
 
@@ -11,6 +12,31 @@ from .catcher import RedirectCatcher
 from .discovery import ServerDetails
 
 TokenUpdater = Callable[[dict], None]
+
+
+def make_client_credentials_session(
+    oidc_url: str,
+    client_id: str,
+    client_secret: str,
+    updater: TokenUpdater | None = None,
+) -> OAuth2Session:
+    auth_server = ServerDetails.discover(oidc_url)
+    client = BackendApplicationClient(client_id=client_id)
+    session = OAuth2Session(
+        client=client,
+        auto_refresh_url=auth_server.token_url,
+        token_updater=updater or (lambda token: None),
+    )
+
+    def refresh_token(url, *args, **kwargs) -> dict:
+        return session.fetch_token(
+            url, client_id=client_id, client_secret=client_secret, scope=["openid"]
+        )
+
+    session.refresh_token = refresh_token
+    refresh_token(auth_server.token_url)
+
+    return session
 
 
 def make_oidc_session(
@@ -59,7 +85,7 @@ def make_oidc_session(
 
 
 def make_path_session(path: Path | str, **kwargs) -> OAuth2Session:
-    '''Same as ``make_oidc_session``, but saves/loads token to OS path.'''
+    """Same as ``make_oidc_session``, but saves/loads token to OS path."""
     match path:
         case str():
             path = Path(path)
@@ -84,7 +110,7 @@ def make_os_cached_session(
     version: str | None = None,
     **kwargs,
 ) -> OAuth2Session:
-    '''Same as ``make_oidc_session``, but saves/loads token to the OS-relevant user cache directory (appdata, ~/.cache/..., etc).'''
+    """Same as ``make_oidc_session``, but saves/loads token to the OS-relevant user cache directory (appdata, ~/.cache/..., etc)."""
     appdirs = AppDirs(appname, appauthor, version)
     dir = Path(appdirs.user_cache_dir)
     dir.mkdir(parents=True, exist_ok=True)

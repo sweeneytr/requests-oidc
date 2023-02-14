@@ -14,6 +14,10 @@ Welcome to Requests-OIDC's documentation!
 .. include:: ../README.rst
   :start-after: inclusion-marker-do-not-remove
 
+
+Authorization Code Flow
++++++++++++++++++++++++
+
 .. autofunction:: requests_oidc.make_oidc_session
 
 
@@ -21,3 +25,8 @@ Welcome to Requests-OIDC's documentation!
 
 
 .. autofunction:: requests_oidc.make_os_cached_session
+
+Client Credentials Flow
++++++++++++++++++++++++
+
+.. autofunction:: requests_oidc.make_client_credentials_session

@@ -19,18 +19,23 @@ def make_client_credentials_session(
     client_id: str,
     client_secret: str,
     updater: TokenUpdater | None = None,
+    scope: list[str] | None = None,
+    **kwargs,
 ) -> OAuth2Session:
+    scope_ = ["openid"] if scope is None else scope + ["openid"]
     auth_server = ServerDetails.discover(oidc_url)
     client = BackendApplicationClient(client_id=client_id)
     session = OAuth2Session(
         client=client,
         auto_refresh_url=auth_server.token_url,
         token_updater=updater or (lambda token: None),
+        scope=scope_,
+        **kwargs,
     )
 
     def refresh_token(url, *args, **kwargs) -> dict:
         return session.fetch_token(
-            url, client_id=client_id, client_secret=client_secret, scope=["openid"]
+            url, client_id=client_id, client_secret=client_secret
         )
 
     session.refresh_token = refresh_token
@@ -45,10 +50,12 @@ def make_oidc_session(
     port: int,
     token: dict | None = None,
     updater: TokenUpdater | None = None,
+    scope: list[str] | None = None,
     **kwargs,
 ) -> OAuth2Session:
     # Docstring set below to leverage f-strings
 
+    scope_ = ["openid"] if scope is None else scope + ["openid"]
     auth_server = ServerDetails.discover(oidc_url)
     redirect_catcher = RedirectCatcher(port)
 
@@ -59,6 +66,7 @@ def make_oidc_session(
         token=token,
         token_updater=updater or (lambda token: None),
         client_id=client_id,
+        scope=scope_,
         **kwargs,
     )
 

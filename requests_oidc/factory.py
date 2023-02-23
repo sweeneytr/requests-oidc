@@ -13,6 +13,15 @@ from .discovery import ServerDetails
 
 TokenUpdater = Callable[[dict], None]
 
+def _make_scope(scope: list[str] | None) -> list[str]:
+    if scope is None:
+        return ["openid"]
+    
+    if 'openid' in scope:
+        return scope
+    
+    return ["openid"] + scope
+
 
 def make_client_credentials_session(
     oidc_url: str,
@@ -22,14 +31,13 @@ def make_client_credentials_session(
     scope: list[str] | None = None,
     **kwargs,
 ) -> OAuth2Session:
-    scope_ = ["openid"] if scope is None else scope + ["openid"]
     auth_server = ServerDetails.discover(oidc_url)
     client = BackendApplicationClient(client_id=client_id)
     session = OAuth2Session(
         client=client,
         auto_refresh_url=auth_server.token_url,
         token_updater=updater or (lambda token: None),
-        scope=scope_,
+        scope=_make_scope(scope),
         **kwargs,
     )
 
@@ -55,7 +63,6 @@ def make_oidc_session(
 ) -> OAuth2Session:
     # Docstring set below to leverage f-strings
 
-    scope_ = ["openid"] if scope is None else scope + ["openid"]
     auth_server = ServerDetails.discover(oidc_url)
     redirect_catcher = RedirectCatcher(port)
 
@@ -66,7 +73,7 @@ def make_oidc_session(
         token=token,
         token_updater=updater or (lambda token: None),
         client_id=client_id,
-        scope=scope_,
+        scope=_make_scope(scope),
         **kwargs,
     )
 

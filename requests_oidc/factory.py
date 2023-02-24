@@ -13,13 +13,14 @@ from .discovery import ServerDetails
 
 TokenUpdater = Callable[[dict], None]
 
+
 def _make_scope(scope: list[str] | None) -> list[str]:
     if scope is None:
         return ["openid"]
-    
-    if 'openid' in scope:
+
+    if "openid" in scope:
         return scope
-    
+
     return ["openid"] + scope
 
 
@@ -29,11 +30,13 @@ def make_client_credentials_session(
     client_secret: str,
     updater: TokenUpdater | None = None,
     scope: list[str] | None = None,
+    *,
+    klass=OAuth2Session,
     **kwargs,
 ) -> OAuth2Session:
     auth_server = ServerDetails.discover(oidc_url)
     client = BackendApplicationClient(client_id=client_id)
-    session = OAuth2Session(
+    session = klass(
         client=client,
         auto_refresh_url=auth_server.token_url,
         token_updater=updater or (lambda token: None),
@@ -59,6 +62,8 @@ def make_oidc_session(
     token: dict | None = None,
     updater: TokenUpdater | None = None,
     scope: list[str] | None = None,
+    *,
+    klass=OAuth2Session,
     **kwargs,
 ) -> OAuth2Session:
     # Docstring set below to leverage f-strings
@@ -66,7 +71,7 @@ def make_oidc_session(
     auth_server = ServerDetails.discover(oidc_url)
     redirect_catcher = RedirectCatcher(port)
 
-    session = OAuth2Session(
+    session = klass(
         redirect_uri=redirect_catcher.redirect_uri,
         auto_refresh_url=auth_server.token_url,
         auto_refresh_kwargs={"client_id": client_id},
@@ -99,7 +104,9 @@ def make_oidc_session(
     return session
 
 
-def make_path_session(path: Path | str, **kwargs) -> OAuth2Session:
+def make_path_session(
+    path: Path | str, *, klass=OAuth2Session, **kwargs
+) -> OAuth2Session:
     """Same as ``make_oidc_session``, but saves/loads token to OS path."""
     match path:
         case str():
@@ -115,7 +122,7 @@ def make_path_session(path: Path | str, **kwargs) -> OAuth2Session:
         with path.open("w") as f:
             json.dump(token, f)
 
-    return make_oidc_session(token=token, updater=update, **kwargs)
+    return make_oidc_session(token=token, updater=update, klass=klass, **kwargs)
 
 
 def make_os_cached_session(
@@ -123,6 +130,8 @@ def make_os_cached_session(
     appauthor: str,
     filename: Path | str = "token.json",
     version: str | None = None,
+    *,
+    klass=OAuth2Session,
     **kwargs,
 ) -> OAuth2Session:
     """Same as ``make_oidc_session``, but saves/loads token to the OS-relevant user cache directory (appdata, ~/.cache/..., etc)."""
@@ -130,7 +139,7 @@ def make_os_cached_session(
     dir = Path(appdirs.user_cache_dir)
     dir.mkdir(parents=True, exist_ok=True)
     file = dir / filename
-    return make_path_session(file, **kwargs)
+    return make_path_session(file, klass=klass, **kwargs)
 
 
 make_oidc_session.__doc__ = f""" Create an `OAuth2Session <https://requests-oauthlib.readthedocs.io/en/latest/api.html#oauth-2-0-session>`_

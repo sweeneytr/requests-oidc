@@ -1,21 +1,51 @@
 #!/usr/bin/env python
-import datetime
+import time
 
-from requests_oidc.factory import (make_client_credentials_session,
-                                   make_os_cached_session)
-
-session = make_os_cached_session(
-    "testapp",
-    "tsweeney",
-    oidc_url="https://auth.nonprod.dustid.net/.well-known/openid-configuration",
-    client_id="restish",
-    port=8484,
+from requests_oidc.factory import (
+    make_client_credentials_session,
+    make_os_cached_session,
+    make_device_auth_session,
 )
-print(session.token["id_token"])
 
-session2 = make_client_credentials_session(
-    oidc_url="https://auth.nonprod.dustid.net/.well-known/openid-configuration",
-    client_id="keycloakify",
-    client_secret=input("Keycloakify secret"),
-)
-print(session2.token)
+
+def os():
+    session = make_os_cached_session(
+        "testapp",
+        "tsweeney",
+        oidc_url="https://auth.nonprod.dustid.net/.well-known/openid-configuration",
+        client_id="restish",
+        port=8484,
+    )
+    return session
+
+
+def cc():
+    session = make_client_credentials_session(
+        oidc_url="https://auth.nonprod.dustid.net/.well-known/openid-configuration",
+        client_id="restish",
+        client_secret=input("restish secret"),
+    )
+    return session
+
+def da():
+    session = make_device_auth_session(
+        oidc_url="https://auth.nonprod.dustid.net/.well-known/openid-configuration",
+        client_id="restish",
+        audience='bombadil'
+    )
+    return session
+
+session = da()
+
+original_access_token = session.access_token
+
+res = session.get("https://auth.nonprod.dustid.net/api/users")
+res.raise_for_status()
+
+time.sleep(session.token["expires_in"] + 5)
+res = session.get("https://auth.nonprod.dustid.net/api/users")
+res.raise_for_status()
+
+new_access_token = session.access_token
+
+assert new_access_token != original_access_token

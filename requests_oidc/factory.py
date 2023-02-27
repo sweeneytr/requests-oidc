@@ -2,6 +2,10 @@ import json
 import webbrowser
 from pathlib import Path
 from typing import Callable
+import requests
+import io
+import time
+import qrcode
 
 from appdirs import AppDirs
 from oauthlib.oauth2 import BackendApplicationClient
@@ -140,6 +144,101 @@ def make_os_cached_session(
     dir.mkdir(parents=True, exist_ok=True)
     file = dir / filename
     return make_path_session(file, klass=klass, **kwargs)
+
+
+def make_device_auth_session(
+    oidc_url: str,
+    client_id: str,
+    audience: str,
+    updater: TokenUpdater | None = None,
+    scope: list[str] | None = None,
+    *,
+    klass=OAuth2Session,
+    **kwargs,
+):
+    auth_server = ServerDetails.discover(oidc_url)
+
+    res = requests.post(
+        auth_server.device_url,
+        data={
+            "client_id": client_id,
+            "scope": _make_scope(scope),
+            "audience": audience,
+        },
+    )
+    if not res.ok:
+        print(res.json())
+    res.raise_for_status()
+
+    data = res.json()
+
+    device_code = data["device_code"]
+    expires_in = data["expires_in"]
+    interval = data["interval"]
+    print(f"Go to {data['verification_uri_complete']}")
+    qr = qrcode.QRCode()
+    qr.add_data(data["verification_uri_complete"])
+    f = io.StringIO()
+    qr.print_ascii(out=f)
+    f.seek(0)
+    print(f.read())
+
+    start = time.time()
+    while (time.time() - start) < expires_in:
+        # Sleep at start so we don't hit the server like, 30ms after we begin the process
+        time.sleep(interval)
+
+        res = requests.post(
+            auth_server.token_url,
+            data={
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                "device_code": device_code,
+                "client_id": client_id,
+            },
+        )
+
+        if res.ok:
+            break
+
+        if res.status_code > 500:
+            raise RuntimeError()
+
+        try:
+            data = res.json()
+        except:
+            res.raise_for_status()
+
+        match data["error"]:
+            case "authorization_pending":
+                continue
+            case "slow_down":
+                # print a warning
+                continue
+            case "expired_token":
+                raise RuntimeError("Device code flow timed out")
+            case "invalid_grant":
+                raise RuntimeError("Your code flow session is long dead, or invalid")
+            case "access_denied":
+                raise RuntimeError("Idiot")
+        res.raise_for_status()
+
+    res.raise_for_status()
+    token = res.json()
+    if token["expires_in"]:
+        token["expires_at"] = time.time() + token["expires_in"]
+
+    session = klass(
+        auto_refresh_url=auth_server.token_url,
+        auto_refresh_kwargs={"client_id": client_id},
+        token=token,
+        token_updater=updater or (lambda token: None),
+        **kwargs,
+    )
+
+    if updater:
+        updater(token)
+        
+    return session
 
 
 make_oidc_session.__doc__ = f""" Create an `OAuth2Session <https://requests-oauthlib.readthedocs.io/en/latest/api.html#oauth-2-0-session>`_

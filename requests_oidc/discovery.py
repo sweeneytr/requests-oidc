@@ -9,6 +9,7 @@ class ServerDetails:
     oidc_url: str
     auth_url: str
     token_url: str
+    device_url: str
 
     @classmethod
     def discover(cls, oidc_url: str) -> Self:
@@ -20,4 +21,5 @@ class ServerDetails:
             oidc_url=oidc_url,
             auth_url=data["authorization_endpoint"],
             token_url=data["token_endpoint"],
+            device_url=data["device_authorization_endpoint"],
         )

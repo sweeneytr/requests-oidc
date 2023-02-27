@@ -173,15 +173,33 @@ def make_device_auth_session(
     data = res.json()
 
     device_code = data["device_code"]
+    user_code = data["user_code"]
     expires_in = data["expires_in"]
     interval = data["interval"]
-    print(f"Go to {data['verification_uri_complete']}")
+    full_url = data["verification_uri_complete"]
+    partial_url = data["verification_uri"]
+    
     qr = qrcode.QRCode()
     qr.add_data(data["verification_uri_complete"])
     f = io.StringIO()
     qr.print_ascii(out=f)
     f.seek(0)
+
+    webbrowser.open(full_url)
+    
+    # Stole this prompt from AWS SSO
+    print(f"""Attempting to automatically open the SSO authorization page in your default browser.
+If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
+
+{partial_url}
+
+Then enter the code:
+
+{user_code}""")
+              
     print(f.read())
+
+    
 
     start = time.time()
     while (time.time() - start) < expires_in:

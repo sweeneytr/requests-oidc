@@ -146,7 +146,7 @@ def make_os_cached_session(
     return make_path_session(file, klass=klass, **kwargs)
 
 
-def make_device_auth_session(
+def make_device_code_session(
     oidc_url: str,
     client_id: str,
     audience: str,

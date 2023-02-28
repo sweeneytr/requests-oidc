@@ -26,6 +26,11 @@ Authorization Code Flow
 
 .. autofunction:: requests_oidc.make_os_cached_session
 
+Device Code Flow
+++++++++++++++++
+
+.. autofunction:: requests_oidc.make_device_code_session
+
 Client Credentials Flow
 +++++++++++++++++++++++
 

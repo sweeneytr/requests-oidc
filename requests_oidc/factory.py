@@ -1,11 +1,11 @@
 import json
 import webbrowser
 from pathlib import Path
-from typing import Callable
 import requests
 import io
 import time
 import qrcode
+from typing import Callable, List, Union
 
 from appdirs import AppDirs
 from oauthlib.oauth2 import BackendApplicationClient
@@ -18,8 +18,7 @@ from .discovery import ServerDetails
 
 TokenUpdater = Callable[[dict], None]
 
-
-def _make_scope(scope: list[str] | None) -> list[str]:
+def _make_scope(scope: Union[List[str] , None]) -> List[str]:
     if scope is None:
         return ["openid"]
 
@@ -33,8 +32,8 @@ def make_client_credentials_session(
     oidc_url: str,
     client_id: str,
     client_secret: str,
-    updater: TokenUpdater | None = None,
-    scope: list[str] | None = None,
+    updater: Union[TokenUpdater , None] = None,
+    scope: Union[List[str] , None] = None,
     *,
     klass=OAuth2Session,
     **kwargs,
@@ -64,9 +63,9 @@ def make_oidc_session(
     oidc_url: str,
     client_id: str,
     port: int,
-    token: dict | None = None,
-    updater: TokenUpdater | None = None,
-    scope: list[str] | None = None,
+    token: Union[dict , None] = None,
+    updater: Union[TokenUpdater , None] = None,
+    scope: Union[List[str] , None] = None,
     *,
     klass=OAuth2Session,
     **kwargs,
@@ -109,12 +108,9 @@ def make_oidc_session(
     return session
 
 
-def make_path_session(
-    path: Path | str, *, klass=OAuth2Session, **kwargs
-) -> OAuth2Session:
+def make_path_session(path: Union[Path , str], *, klass=OAuth2Session, **kwargs) -> OAuth2Session:
     """Same as ``make_oidc_session``, but saves/loads token to OS path."""
-    match path:
-        case str():
+    if path == str():
             path = Path(path)
 
     try:
@@ -133,8 +129,8 @@ def make_path_session(
 def make_os_cached_session(
     appname: str,
     appauthor: str,
-    filename: Path | str = "token.json",
-    version: str | None = None,
+    filename: Union[Path , str] = "token.json",
+    version: Union[str , None] = None,
     *,
     klass=OAuth2Session,
     **kwargs,
@@ -151,8 +147,8 @@ def make_device_code_session(
     oidc_url: str,
     client_id: str,
     audience: str,
-    updater: TokenUpdater | None = None,
-    scope: list[str] | None = None,
+    updater: Union[TokenUpdater , None] = None,
+    scope: Union[List[str] , None] = None,
     *,
     klass=OAuth2Session,
     **kwargs,

@@ -223,19 +223,20 @@ Then enter the code:
         except:
             res.raise_for_status()
 
-        match data["error"]:
-            case "authorization_pending":
-                continue
-            case "slow_down":
-                # Should never get this, we're waiting correctly
-                continue
-            case "expired_token":
-                raise AuthFlowError("Device code timed out")
-            case "invalid_grant":
-                raise AuthFlowError("Device code timed out or was invalid")
-            case "access_denied":
-                raise AuthFlowError("Idiot")
-        res.raise_for_status()
+        case = data["error"]
+        if case == "authorization_pending":
+            continue
+        elif case == "slow_down":
+            # Should never get this, we're waiting correctly
+            continue
+        elif case == "expired_token":
+            raise AuthFlowError("Device code timed out")
+        elif case == "invalid_grant":
+            raise AuthFlowError("Device code timed out or was invalid")
+        elif case == "access_denied":
+            raise AuthFlowError("Idiot")
+        else:
+            res.raise_for_status()
 
     res.raise_for_status()
     token = res.json()

@@ -1,13 +1,7 @@
 [tool.poetry]
 name = "requests-oidc"
-<<<<<<< HEAD
 version = "0.3.3"
-||||||| parent of 0e35171 (old version made compatible with py3.8)
-version = "0.3.1"
-=======
-version = "0.3.1-py38"
->>>>>>> 0e35171 (old version made compatible with py3.8)
-description = ""
+description = "Py 3.8 compitable version of original repo"
 authors = ["Tristan Sweeney <tsweeney@dustidentity.com>"]
 readme = "README.rst"
 packages = [{include = "requests_oidc"}]

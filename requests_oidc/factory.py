@@ -13,6 +13,7 @@ from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 from requests_oauthlib import OAuth2Session
 
 from .catcher import RedirectCatcher
+from .exceptions import AuthFlowError
 from .discovery import ServerDetails
 
 TokenUpdater = Callable[[dict], None]
@@ -219,7 +220,7 @@ Then enter the code:
             break
 
         if res.status_code > 500:
-            raise RuntimeError()
+            raise AuthFlowError('Server error talking to OIDC server')
 
         try:
             data = res.json()
@@ -230,14 +231,14 @@ Then enter the code:
             case "authorization_pending":
                 continue
             case "slow_down":
-                # print a warning
+                # Should never get this, we're waiting correctly
                 continue
             case "expired_token":
-                raise RuntimeError("Device code flow timed out")
+                raise AuthFlowError("Device code timed out")
             case "invalid_grant":
-                raise RuntimeError("Your code flow session is long dead, or invalid")
+                raise AuthFlowError("Device code timed out or was invalid")
             case "access_denied":
-                raise RuntimeError("Idiot")
+                raise AuthFlowError("Idiot")
         res.raise_for_status()
 
     res.raise_for_status()

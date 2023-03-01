@@ -5,6 +5,7 @@ from .factory import (
     make_oidc_session,
     make_os_cached_session,
     make_path_session,
+    make_device_code_session
 )
 
 # BS to work around oauthlib's wonkyness

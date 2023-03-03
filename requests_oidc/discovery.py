@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Self
+# from typing import Self
 
 import requests
 
@@ -12,7 +12,7 @@ class ServerDetails:
     device_url: str
 
     @classmethod
-    def discover(cls, oidc_url: str) -> Self:
+    def discover(cls, oidc_url: str):
         res = requests.get(oidc_url)
         res.raise_for_status()
         data = res.json()

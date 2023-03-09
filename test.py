@@ -3,8 +3,8 @@ import time
 
 from requests_oidc.factory import (
     make_client_credentials_session,
-    make_os_cached_session,
     make_device_code_session,
+    make_os_cached_session,
 )
 
 
@@ -27,13 +27,15 @@ def cc():
     )
     return session
 
+
 def da():
     session = make_device_code_session(
         oidc_url="https://auth.nonprod.dustid.net/.well-known/openid-configuration",
         client_id="restish",
-        audience='bombadil'
+        audience="bombadil",
     )
     return session
+
 
 session = cc()
 

@@ -1,7 +1,9 @@
 from dataclasses import dataclass
-from typing import Self
+from typing import TypeVar, Type
 
 import requests
+
+TSelf = TypeVar("TSelf", bound="ServerDetails")
 
 
 @dataclass
@@ -12,7 +14,7 @@ class ServerDetails:
     device_url: str
 
     @classmethod
-    def discover(cls, oidc_url: str) -> Self:
+    def discover(cls: Type[TSelf], oidc_url: str) -> TSelf:
         res = requests.get(oidc_url)
         res.raise_for_status()
         data = res.json()

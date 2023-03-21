@@ -1,5 +1,6 @@
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
+from typing import Optional, List
 
 from ..types import TokenUpdater
 from ..utils import ServerDetails, make_scope
@@ -9,8 +10,8 @@ def make_client_credentials_session(
     oidc_url: str,
     client_id: str,
     client_secret: str,
-    updater: TokenUpdater | None = None,
-    scope: list[str] | None = None,
+    updater: Optional[TokenUpdater] = None,
+    scope: Optional[List[str]] = None,
     *,
     klass=OAuth2Session,
     **kwargs,

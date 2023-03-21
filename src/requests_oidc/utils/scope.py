@@ -1,4 +1,6 @@
-def make_scope(scope: list[str] | None) -> list[str]:
+from typing import Optional, List
+
+def make_scope(scope: Optional[List[str]]) -> List[str]:
     if scope is None:
         return ["openid"]
 

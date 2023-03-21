@@ -1,6 +1,7 @@
 import io
 import time
 import webbrowser
+from typing import Optional, List
 
 import qrcode
 import requests
@@ -67,26 +68,26 @@ def _poll_for_token(
         except:
             res.raise_for_status()
 
-        match data["error"]:
-            case "authorization_pending":
-                continue
-            case "slow_down":
-                # Should never get this, we're waiting correctly
-                continue
-            case "expired_token":
-                raise AuthFlowError("Device code timed out")
-            case "invalid_grant":
-                raise AuthFlowError("Device code timed out or was invalid")
-            case "access_denied":
-                raise AuthFlowError("Idiot")
-            case _:
-                res.raise_for_status()
+        if data["error"] == "authorization_pending":
+            continue
+        elif data["error"] == "slow_down":
+            # Should never get this, we're waiting correctly
+            continue
+        elif data["error"] == "expired_token":
+            raise AuthFlowError("Device code timed out")
+        elif data["error"] == "invalid_grant":
+            raise AuthFlowError("Device code timed out or was invalid")
+        elif data["error"] == "access_denied":
+            raise AuthFlowError("Idiot")
+        else:
+            res.raise_for_status()
+            continue
 
     res.raise_for_status()
     return res.json()
 
 
-def auth_code_flow(urls: ServerDetails, client_id: str, scope: list[str], aud: str) -> dict:
+def auth_code_flow(urls: ServerDetails, client_id: str, scope: List[str], aud: str) -> dict:
     res = requests.post(
         urls.device_url,
         data={"client_id": client_id, "scope": make_scope(scope), "audience": aud},
@@ -112,9 +113,9 @@ def make_device_code_session(
     oidc_url: str,
     client_id: str,
     audience: str,
-    token: dict | None = None,
-    updater: TokenUpdater | None = None,
-    scope: list[str] | None = None,
+    token: Optional[dict] = None,
+    updater: Optional[TokenUpdater] = None,
+    scope: Optional[List[str]] = None,
     *,
     klass=OAuth2Session,
     **kwargs,

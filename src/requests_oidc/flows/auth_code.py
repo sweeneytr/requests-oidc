@@ -1,6 +1,7 @@
 import json
 import webbrowser
 from pathlib import Path
+from typing import Optional, Union, List
 
 from appdirs import AppDirs
 from oauthlib.oauth2.rfc6749.errors import OAuth2Error
@@ -14,9 +15,9 @@ def make_oidc_session(
     oidc_url: str,
     client_id: str,
     port: int,
-    token: dict | None = None,
-    updater: TokenUpdater | None = None,
-    scope: list[str] | None = None,
+    token: Optional[dict] = None,
+    updater: Optional[TokenUpdater] = None,
+    scope: Optional[List[str]] = None,
     *,
     klass=OAuth2Session,
     **kwargs,
@@ -60,12 +61,11 @@ def make_oidc_session(
 
 
 def make_path_session(
-    path: Path | str, *, klass=OAuth2Session, **kwargs
+    path: Union[Path, str], *, klass=OAuth2Session, **kwargs
 ) -> OAuth2Session:
     """Same as ``make_oidc_session``, but saves/loads token to OS path."""
-    match path:
-        case str():
-            path = Path(path)
+    if isinstance(path, str):
+        path = Path(path)
 
     try:
         with path.open() as f:
@@ -83,8 +83,8 @@ def make_path_session(
 def make_os_cached_session(
     appname: str,
     appauthor: str,
-    filename: Path | str = "token.json",
-    version: str | None = None,
+    filename: Union[Path, str] = "token.json",
+    version: Optional[str] = None,
     *,
     klass=OAuth2Session,
     **kwargs,

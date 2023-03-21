@@ -1,6 +1,7 @@
+from typing import List, Optional
+
 from oauthlib.oauth2 import BackendApplicationClient
-from requests_oauthlib import OAuth2Session # type: ignore
-from typing import Optional, List
+from requests_oauthlib import OAuth2Session  # type: ignore
 
 from ..types import TokenUpdater
 from ..utils import ServerDetails, make_scope

@@ -1,4 +1,5 @@
-from typing import Optional, List
+from typing import List, Optional
+
 
 def make_scope(scope: Optional[List[str]]) -> List[str]:
     if scope is None:

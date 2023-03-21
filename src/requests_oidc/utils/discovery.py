@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TypeVar, Type
+from typing import Type, TypeVar
 
 import requests
 

@@ -1,11 +1,11 @@
 import io
 import time
 import webbrowser
-from typing import Optional, List
+from typing import List, Optional
 
-import qrcode # type: ignore
+import qrcode  # type: ignore
 import requests
-from requests_oauthlib import OAuth2Session # type: ignore
+from requests_oauthlib import OAuth2Session  # type: ignore
 
 from ..exceptions import AuthFlowError
 from ..types import TokenUpdater
@@ -87,7 +87,9 @@ def _poll_for_token(
     return res.json()
 
 
-def auth_code_flow(urls: ServerDetails, client_id: str, scope: List[str], aud: str) -> dict:
+def auth_code_flow(
+    urls: ServerDetails, client_id: str, scope: List[str], aud: str
+) -> dict:
     res = requests.post(
         urls.device_url,
         data={"client_id": client_id, "scope": make_scope(scope), "audience": aud},
@@ -100,7 +102,11 @@ def auth_code_flow(urls: ServerDetails, client_id: str, scope: List[str], aud: s
     )
 
     token = _poll_for_token(
-        data["expires_in"], data["interval"], data["user_code"], client_id, urls.token_url
+        data["expires_in"],
+        data["interval"],
+        data["user_code"],
+        client_id,
+        urls.token_url,
     )
 
     if token["expires_in"]:

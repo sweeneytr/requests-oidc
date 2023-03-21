@@ -1,11 +1,11 @@
 import json
 import webbrowser
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 from appdirs import AppDirs
 from oauthlib.oauth2.rfc6749.errors import OAuth2Error
-from requests_oauthlib import OAuth2Session # type: ignore
+from requests_oauthlib import OAuth2Session  # type: ignore
 
 from ..types import TokenUpdater
 from ..utils import RedirectCatcher, ServerDetails, make_scope
@@ -61,10 +61,18 @@ def make_oidc_session(
 
 
 def make_path_session(
-    path: Union[Path, str], *, klass=OAuth2Session, **kwargs
+    path: Union[Path, str],
+    oidc_url: str,
+    client_id: str,
+    port: int,
+    updater: Optional[TokenUpdater] = None,
+    scope: Optional[List[str]] = None,
+    *,
+    klass=OAuth2Session,
+    **kwargs,
 ) -> OAuth2Session:
     """Same as ``make_oidc_session``, but saves/loads token to OS path."""
-    _path = Path(path) 
+    _path = Path(path)
 
     try:
         with _path.open() as f:
@@ -75,15 +83,31 @@ def make_path_session(
     def update(token: dict) -> None:
         with _path.open("w") as f:
             json.dump(token, f)
+        if updater:
+            updater(token)
 
-    return make_oidc_session(token=token, updater=update, klass=klass, **kwargs)
+    return make_oidc_session(
+        oidc_url=oidc_url,
+        client_id=client_id,
+        port=port,
+        token=token,
+        updater=update,
+        scope=scope,
+        klass=klass,
+        **kwargs,
+    )
 
 
 def make_os_cached_session(
+    oidc_url: str,
+    client_id: str,
+    port: int,
     appname: str,
     appauthor: str,
     filename: Union[Path, str] = "token.json",
     version: Optional[str] = None,
+    updater: Optional[TokenUpdater] = None,
+    scope: Optional[List[str]] = None,
     *,
     klass=OAuth2Session,
     **kwargs,
@@ -93,7 +117,16 @@ def make_os_cached_session(
     dir = Path(appdirs.user_cache_dir)
     dir.mkdir(parents=True, exist_ok=True)
     file = dir / filename
-    return make_path_session(file, klass=klass, **kwargs)
+    return make_path_session(
+        path=file,
+        oidc_url=oidc_url,
+        client_id=client_id,
+        port=port,
+        updater=updater,
+        scope=scope,
+        klass=klass,
+        **kwargs,
+    )
 
 
 make_oidc_session.__doc__ = f""" Create an `OAuth2Session <https://requests-oauthlib.readthedocs.io/en/latest/api.html#oauth-2-0-session>`_

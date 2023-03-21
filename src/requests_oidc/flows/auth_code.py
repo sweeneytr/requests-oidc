@@ -5,7 +5,7 @@ from typing import Optional, Union, List
 
 from appdirs import AppDirs
 from oauthlib.oauth2.rfc6749.errors import OAuth2Error
-from requests_oauthlib import OAuth2Session
+from requests_oauthlib import OAuth2Session # type: ignore
 
 from ..types import TokenUpdater
 from ..utils import RedirectCatcher, ServerDetails, make_scope
@@ -54,7 +54,7 @@ def make_oidc_session(
         reply = "https://thecakeisalie.test" + path
         token = session.fetch_token(auth_server.token_url, authorization_response=reply)
 
-    if updater:
+    if updater and token:
         updater(token)
 
     return session
@@ -64,17 +64,16 @@ def make_path_session(
     path: Union[Path, str], *, klass=OAuth2Session, **kwargs
 ) -> OAuth2Session:
     """Same as ``make_oidc_session``, but saves/loads token to OS path."""
-    if isinstance(path, str):
-        path = Path(path)
+    _path = Path(path) 
 
     try:
-        with path.open() as f:
+        with _path.open() as f:
             token = json.load(f)
     except FileNotFoundError:
         token = None
 
     def update(token: dict) -> None:
-        with path.open("w") as f:
+        with _path.open("w") as f:
             json.dump(token, f)
 
     return make_oidc_session(token=token, updater=update, klass=klass, **kwargs)

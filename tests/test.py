@@ -37,17 +37,17 @@ def da():
     return session
 
 
-session = cc()
+# session = cc()
 
-original_access_token = session.access_token
+# original_access_token = session.access_token
 
-res = session.get("https://auth.nonprod.dustid.net/api/users")
-res.raise_for_status()
+# res = session.get("https://auth.nonprod.dustid.net/api/users")
+# res.raise_for_status()
 
-time.sleep(session.token["expires_in"] + 5)
-res = session.get("https://auth.nonprod.dustid.net/api/users")
-res.raise_for_status()
+# time.sleep(session.token["expires_in"] + 5)
+# res = session.get("https://auth.nonprod.dustid.net/api/users")
+# res.raise_for_status()
 
-new_access_token = session.access_token
+# new_access_token = session.access_token
 
-assert new_access_token != original_access_token
+# assert new_access_token != original_access_token

@@ -1,5 +1,5 @@
 from oauthlib.oauth2 import BackendApplicationClient
-from requests_oauthlib import OAuth2Session
+from requests_oauthlib import OAuth2Session # type: ignore
 from typing import Optional, List
 
 from ..types import TokenUpdater

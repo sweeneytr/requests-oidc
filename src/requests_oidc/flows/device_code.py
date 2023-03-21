@@ -3,9 +3,9 @@ import time
 import webbrowser
 from typing import Optional, List
 
-import qrcode
+import qrcode # type: ignore
 import requests
-from requests_oauthlib import OAuth2Session
+from requests_oauthlib import OAuth2Session # type: ignore
 
 from ..exceptions import AuthFlowError
 from ..types import TokenUpdater

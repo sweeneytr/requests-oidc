@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import time
 
-from requests_oidc.factory import (
+from requests_oidc import (
     make_client_credentials_session,
     make_device_code_session,
     make_os_cached_session,

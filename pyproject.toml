@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "requests-oidc"
-version = "0.4.0"
+version = "0.4.1"
 description = ""
 authors = ["Tristan Sweeney <tsweeney@dustidentity.com>"]
 readme = "README.rst"

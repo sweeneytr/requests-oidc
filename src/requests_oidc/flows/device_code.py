@@ -104,7 +104,7 @@ def auth_code_flow(
     token = _poll_for_token(
         data["expires_in"],
         data["interval"],
-        data["user_code"],
+        data["device_code"],
         client_id,
         urls.token_url,
     )

@@ -6,6 +6,9 @@ def access_expired(token: dict, margin: int = 0) -> bool:
 
 
 def refresh_expired(token: dict, margin: int = 0) -> bool:
+    if "offline_access" in token['scope']:
+        return False
+
     refresh_expires_at = (
         token["refresh_expires_in"] - token["expires_in"] + token["expires_at"]
     )

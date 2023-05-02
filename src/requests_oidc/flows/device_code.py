@@ -8,8 +8,9 @@ import requests
 from requests_oauthlib import OAuth2Session  # type: ignore
 
 from ..exceptions import AuthFlowError
-from ..types import TokenUpdater
+from ..types import Plugin
 from ..utils import ServerDetails, make_scope
+from .utils import refresh_expired
 
 
 def _make_qr(msg: str) -> str:
@@ -26,8 +27,10 @@ def _prompt_user(partial_url: str, user_code: str, full_url: str) -> None:
 
     # Stole this prompt from AWS SSO
     print(
-        f"""Attempting to automatically open the SSO authorization page in your default browser.
-If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
+        f"""\
+Attempting to automatically open the SSO authorization page in your default browser.
+If the browser does not open or you wish to use a different device to authorize this
+request, open the following URL:
 
 {partial_url}
 
@@ -87,7 +90,7 @@ def _poll_for_token(
     return res.json()
 
 
-def auth_code_flow(
+def device_code_flow(
     urls: ServerDetails, client_id: str, scope: List[str], aud: str
 ) -> dict:
     res = requests.post(
@@ -120,25 +123,29 @@ def make_device_code_session(
     client_id: str,
     audience: str,
     token: Optional[dict] = None,
-    updater: Optional[TokenUpdater] = None,
     scope: Optional[List[str]] = None,
     *,
     klass=OAuth2Session,
+    plugin: Optional[Plugin] = None,
     **kwargs,
 ):
     auth_server = ServerDetails.discover(oidc_url)
 
-    token = auth_code_flow(auth_server, client_id, make_scope(scope), audience)
+    def updater(token: dict) -> None:
+        if plugin:
+            plugin.update(token)
+
+    token = None if plugin is None else plugin.load()
+    if token is None or refresh_expired(token, margin=15):
+        token = device_code_flow(auth_server, client_id, make_scope(scope), audience)
+        updater(token)
 
     session = klass(
         auto_refresh_url=auth_server.token_url,
         auto_refresh_kwargs={"client_id": client_id},
         token=token,
-        token_updater=updater or (lambda token: None),
+        token_updater=updater,
         **kwargs,
     )
-
-    if updater:
-        updater(token)
 
     return session

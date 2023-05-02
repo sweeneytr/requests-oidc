@@ -1,25 +1,21 @@
-import json
 import webbrowser
-from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional
 
-from appdirs import AppDirs
-from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 from requests_oauthlib import OAuth2Session  # type: ignore
 
-from ..types import TokenUpdater
+from ..types import Plugin
 from ..utils import RedirectCatcher, ServerDetails, make_scope
+from .utils import refresh_expired
 
 
-def make_oidc_session(
+def make_auth_code_session(
     oidc_url: str,
     client_id: str,
     port: int,
-    token: Optional[dict] = None,
-    updater: Optional[TokenUpdater] = None,
     scope: Optional[List[str]] = None,
     *,
     klass=OAuth2Session,
+    plugin: Optional[Plugin] = None,
     **kwargs,
 ) -> OAuth2Session:
     # Docstring set below to leverage f-strings
@@ -27,109 +23,37 @@ def make_oidc_session(
     auth_server = ServerDetails.discover(oidc_url)
     redirect_catcher = RedirectCatcher(port)
 
+    def updater(token: dict) -> None:
+        if plugin:
+            plugin.update(token)
+
+    token = None if plugin is None else plugin.load()
+    if token is None or refresh_expired(token, margin=15):
+        session = OAuth2Session(
+            redirect_uri=redirect_catcher.redirect_uri,
+            client_id=client_id,
+            scope=make_scope(scope),
+        )
+        auth_redirect_url, _ = session.authorization_url(auth_server.auth_url)
+        webbrowser.open(auth_redirect_url)
+        path = redirect_catcher.catch()
+        token = session.fetch_token(auth_server.token_url, authorization_response=path)
+        updater(token)
+
     session = klass(
-        redirect_uri=redirect_catcher.redirect_uri,
         auto_refresh_url=auth_server.token_url,
         auto_refresh_kwargs={"client_id": client_id},
         token=token,
-        token_updater=updater or (lambda token: None),
+        token_updater=updater,
         client_id=client_id,
         scope=make_scope(scope),
         **kwargs,
     )
 
-    try:
-        if token:
-            token = session.refresh_token(auth_server.token_url)
-    except OAuth2Error:
-        token = None
-
-    if not token:
-        auth_redirect_url, _ = session.authorization_url(auth_server.auth_url)
-        webbrowser.open(auth_redirect_url)
-
-        path = redirect_catcher.catch()
-
-        # requests_oauthlib insists you must use https. So I lied to it.
-        reply = "https://thecakeisalie.test" + path
-        token = session.fetch_token(auth_server.token_url, authorization_response=reply)
-
-    if updater and token:
-        updater(token)
-
     return session
 
 
-def make_path_session(
-    path: Union[Path, str],
-    oidc_url: str,
-    client_id: str,
-    port: int,
-    updater: Optional[TokenUpdater] = None,
-    scope: Optional[List[str]] = None,
-    *,
-    klass=OAuth2Session,
-    **kwargs,
-) -> OAuth2Session:
-    """Same as ``make_oidc_session``, but saves/loads token to OS path."""
-    _path = Path(path)
-
-    try:
-        with _path.open() as f:
-            token = json.load(f)
-    except FileNotFoundError:
-        token = None
-
-    def update(token: dict) -> None:
-        with _path.open("w") as f:
-            json.dump(token, f)
-        if updater:
-            updater(token)
-
-    return make_oidc_session(
-        oidc_url=oidc_url,
-        client_id=client_id,
-        port=port,
-        token=token,
-        updater=update,
-        scope=scope,
-        klass=klass,
-        **kwargs,
-    )
-
-
-def make_os_cached_session(
-    oidc_url: str,
-    client_id: str,
-    port: int,
-    appname: str,
-    appauthor: str,
-    filename: Union[Path, str] = "token.json",
-    version: Optional[str] = None,
-    updater: Optional[TokenUpdater] = None,
-    scope: Optional[List[str]] = None,
-    *,
-    klass=OAuth2Session,
-    **kwargs,
-) -> OAuth2Session:
-    """Same as ``make_oidc_session``, but saves/loads token to the OS-relevant user cache directory (appdata, ~/.cache/..., etc)."""
-    appdirs = AppDirs(appname, appauthor, version)
-    dir = Path(appdirs.user_cache_dir)
-    dir.mkdir(parents=True, exist_ok=True)
-    file = dir / filename
-    return make_path_session(
-        path=file,
-        oidc_url=oidc_url,
-        client_id=client_id,
-        port=port,
-        updater=updater,
-        scope=scope,
-        klass=klass,
-        **kwargs,
-    )
-
-
-make_oidc_session.__doc__ = f""" Create an `OAuth2Session <https://requests-oauthlib.readthedocs.io/en/latest/api.html#oauth-2-0-session>`_
+make_auth_code_session.__doc__ = f""" Create an `OAuth2Session <https://requests-oauthlib.readthedocs.io/en/latest/api.html#oauth-2-0-session>`_
     via web redirect, w/ automatic token management.
 
     After it is created, this session will behave as a regular

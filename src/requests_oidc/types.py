@@ -1,3 +1,9 @@
-from typing import Callable
+from typing import Protocol, Optional
 
-TokenUpdater = Callable[[dict], None]
+
+class Plugin(Protocol):
+    def load(self) -> Optional[dict]:
+        ...
+
+    def update(self, token: dict) -> None:
+        ...

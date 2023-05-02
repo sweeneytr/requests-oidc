@@ -10,3 +10,6 @@ def refresh_expired(token: dict, margin: int = 0) -> bool:
         token["refresh_expires_in"] - token["expires_in"] + token["expires_at"]
     )
     return (time.time() + margin) > (refresh_expires_at + margin)
+
+def scope_mismatch(token: dict, scopes: list[str]) -> bool:
+    return any(scope not in token['scope'] for scope in scopes)

@@ -10,7 +10,7 @@ from requests_oauthlib import OAuth2Session  # type: ignore
 from ..exceptions import AuthFlowError
 from ..types import Plugin
 from ..utils import ServerDetails, make_scope
-from .utils import refresh_expired
+from .utils import refresh_expired, scope_mismatch
 
 
 def _make_qr(msg: str) -> str:
@@ -130,14 +130,15 @@ def make_device_code_session(
     **kwargs,
 ):
     auth_server = ServerDetails.discover(oidc_url)
+    scope = make_scope(scope)
 
     def updater(token: dict) -> None:
         if plugin:
             plugin.update(token)
 
     token = None if plugin is None else plugin.load()
-    if token is None or refresh_expired(token, margin=15):
-        token = device_code_flow(auth_server, client_id, make_scope(scope), audience)
+    if token is None or refresh_expired(token, margin=15) or scope_mismatch(token, scope):
+        token = device_code_flow(auth_server, client_id, scope, audience)
         updater(token)
 
     session = klass(

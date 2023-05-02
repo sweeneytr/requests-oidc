@@ -19,6 +19,7 @@ def make_client_credentials_session(
 ) -> OAuth2Session:
     auth_server = ServerDetails.discover(oidc_url)
     client = BackendApplicationClient(client_id=client_id)
+    scope = make_scope(scope)
 
     def updater(token: dict) -> None:
         if plugin:
@@ -28,7 +29,7 @@ def make_client_credentials_session(
         client=client,
         auto_refresh_url=auth_server.token_url,
         token_updater=updater,
-        scope=make_scope(scope),
+        scope=scope,
         **kwargs,
     )
 

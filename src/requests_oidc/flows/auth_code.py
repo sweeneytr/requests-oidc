@@ -5,7 +5,7 @@ from requests_oauthlib import OAuth2Session  # type: ignore
 
 from ..types import Plugin
 from ..utils import RedirectCatcher, ServerDetails, make_scope
-from .utils import refresh_expired
+from .utils import refresh_expired, scope_mismatch
 
 
 def make_auth_code_session(
@@ -22,17 +22,18 @@ def make_auth_code_session(
 
     auth_server = ServerDetails.discover(oidc_url)
     redirect_catcher = RedirectCatcher(port)
+    scope = make_scope(scope)
 
     def updater(token: dict) -> None:
         if plugin:
             plugin.update(token)
 
     token = None if plugin is None else plugin.load()
-    if token is None or refresh_expired(token, margin=15):
+    if token is None or refresh_expired(token, margin=15) or scope_mismatch(token, scope):
         session = OAuth2Session(
             redirect_uri=redirect_catcher.redirect_uri,
             client_id=client_id,
-            scope=make_scope(scope),
+            scope=scope,
         )
         auth_redirect_url, _ = session.authorization_url(auth_server.auth_url)
         webbrowser.open(auth_redirect_url)

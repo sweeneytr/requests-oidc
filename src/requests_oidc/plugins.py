@@ -7,10 +7,15 @@ from typing import Optional
 class PathPlugin:
     """Same as ``make_oidc_session``, but saves/loads token to OS path."""
 
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, *, noload: bool = False, nostore: bool = False) -> None:
         self.path = path
+        self.noload = noload
+        self.nostore = nostore
 
     def load(self) -> Optional[dict]:
+        if self.noload:
+            return None
+        
         try:
             with self.path.open() as f:
                 return json.load(f)
@@ -18,6 +23,9 @@ class PathPlugin:
             return None
 
     def update(self, token: dict) -> None:
+        if self.nostore:
+            return
+        
         with self.path.open("w") as f:
             json.dump(token, f)
 
@@ -31,8 +39,9 @@ class OSCachedPlugin(PathPlugin):
         appauthor: str,
         version: str | None = None,
         filename: str = "token.json",
+        *, noload: bool = False, nostore: bool = False
     ) -> None:
         dirs = appdirs.AppDirs(appname=appname, appauthor=appauthor, version=version)
         dir = Path(dirs.user_cache_dir)
         dir.mkdir(parents=True, exist_ok=True)
-        super().__init__(dir / filename)
+        super().__init__(dir / filename, noload=noload, nostore=nostore)

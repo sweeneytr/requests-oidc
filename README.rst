@@ -3,12 +3,28 @@ Requests-OIDC
 
 .. inclusion-marker-do-not-remove
 
-Implements a simple single-function API for creating a requests ``Session`` that
+Implements a simple API for creating a requests ``Session`` that
 manages your OIDC-discovered OAuth2 session for you.
 
 ::
 
    pip install requests-oidc
+
+.. code-block:: python
+
+   from requests_oidc import make_auth_code_session
+   from requests_oidc.plugins import OSCachedPlugin
+
+   oidc_url = "https://your-oidc-provider.com/.well-known/openid-configuration"
+   client_id = "your-app"
+   port = 8675
+   scope = ["openid", "email", "profile"]
+
+   plugin = OSCachedPlugin("your-app", "your-company")
+
+
+
+   session = make_auth_code_session(oidc_url, client_id, port, scope, plugin=plugin)
 
 
 .. list-table::

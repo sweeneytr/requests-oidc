@@ -14,24 +14,25 @@ Welcome to Requests-OIDC's documentation!
 .. include:: ../README.rst
   :start-after: inclusion-marker-do-not-remove
 
+.. automodule:: requests_oidc
 
-Authorization Code Flow
-+++++++++++++++++++++++
+Flows
+-----
 
-.. autofunction:: requests_oidc.make_oidc_session
+.. autofunction:: make_auth_code_session
+
+.. autofunction:: make_device_code_session
+
+.. autofunction:: make_client_credentials_session
+
+.. autofunction:: make_token_session
 
 
-.. autofunction:: requests_oidc.make_path_session
+Plugins
+-------
 
+.. automodule:: requests_oidc.plugins
 
-.. autofunction:: requests_oidc.make_os_cached_session
+.. autoclass:: PathPlugin
 
-Device Code Flow
-++++++++++++++++
-
-.. autofunction:: requests_oidc.make_device_code_session
-
-Client Credentials Flow
-+++++++++++++++++++++++
-
-.. autofunction:: requests_oidc.make_client_credentials_session
+.. autoclass:: OSCachedPlugin

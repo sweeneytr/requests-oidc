@@ -5,7 +5,7 @@ from typing import Optional
 
 
 class PathPlugin:
-    """Same as ``make_oidc_session``, but saves/loads token to OS path."""
+    """Plugin to load / store files to an OS path location"""
 
     def __init__(self, path: Path, *, noload: bool = False, nostore: bool = False) -> None:
         self.path = path
@@ -31,7 +31,7 @@ class PathPlugin:
 
 
 class OSCachedPlugin(PathPlugin):
-    """Same as ``make_oidc_session``, but saves/loads token to the OS-relevant user cache directory (appdata, ~/.cache/..., etc)."""
+    """Same as ``PathPlugin``, but saves/loads to the OS's user-cache directory (appdata, ~/.cache/..., etc)."""
 
     def __init__(
         self,

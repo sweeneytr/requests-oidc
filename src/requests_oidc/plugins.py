@@ -37,7 +37,7 @@ class OSCachedPlugin(PathPlugin):
         self,
         appname: str,
         appauthor: str,
-        version: str | None = None,
+        version: Optional[str] = None,
         filename: str = "token.json",
         *, noload: bool = False, nostore: bool = False
     ) -> None:

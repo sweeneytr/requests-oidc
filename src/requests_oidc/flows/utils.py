@@ -1,4 +1,5 @@
 import time
+from typing import List
 
 
 def access_expired(token: dict, margin: int = 0) -> bool:
@@ -14,5 +15,5 @@ def refresh_expired(token: dict, margin: int = 0) -> bool:
     )
     return (time.time() + margin) > (refresh_expires_at + margin)
 
-def scope_mismatch(token: dict, scopes: list[str]) -> bool:
+def scope_mismatch(token: dict, scopes: List[str]) -> bool:
     return any(scope not in token['scope'] for scope in scopes)

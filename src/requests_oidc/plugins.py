@@ -1,6 +1,6 @@
 from pathlib import Path
 import json
-import appdirs
+import platformdirs
 from typing import Optional
 
 
@@ -41,7 +41,7 @@ class OSCachedPlugin(PathPlugin):
         filename: str = "token.json",
         *, noload: bool = False, nostore: bool = False
     ) -> None:
-        dirs = appdirs.AppDirs(appname=appname, appauthor=appauthor, version=version)
-        dir = Path(dirs.user_cache_dir)
+        dirs = platformdirs.PlatformDirs(appname=appname, appauthor=appauthor, version=version)
+        dir = dirs.user_cache_path
         dir.mkdir(parents=True, exist_ok=True)
         super().__init__(dir / filename, noload=noload, nostore=nostore)
